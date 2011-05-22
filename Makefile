@@ -1,7 +1,10 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=arya
-GOFILES=arya.go
+GOFILES=arya.go\
+	gotest_handler.go\
+	gocheck_handler.go\
+
 
 include $(GOROOT)/src/Make.cmd
 

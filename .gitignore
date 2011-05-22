@@ -6,4 +6,5 @@ arya
 *.man
 *.6
 .#*
-*#
+_test*
+*.out

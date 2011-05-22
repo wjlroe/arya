@@ -1,5 +1,7 @@
 # Arya
 
+![House Stark](http://awoiaf.westeros.org/images/thumb/5/51/House_Stark.PNG/250px-House_Stark.PNG)
+
 Arya is a tool to collect stats from your coding activities so you can track how awesome or not you are.
 
 ## Features:

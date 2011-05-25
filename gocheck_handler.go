@@ -13,6 +13,18 @@ import (
 var go_check_ok = regexp.MustCompile("OK: [0-9]* passed")
 var go_check_fail = regexp.MustCompile("OOPS: [0-9]* passed, ([0-9]*) FAILED")
 
+func GocheckHandler(lines chan string, eof chan bool) {
+	for {
+		num_errors = 0
+		matched_lines = []string
+
+		select {
+
+		line := <-lines
+
+	}
+}
+
 func GocheckHandler(input io.Reader) *Stat {
 	stat := &Stat{num_errors: 0, matched_lines: []string{}}
 	matched_lines := []string{}

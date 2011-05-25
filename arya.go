@@ -65,3 +65,34 @@ func main() {
 	stat.time = time.LocalTime().Format(time.UnixDate)
 	fmt.Printf("Stats: %s\n", stat)
 }
+
+func feedHandlers(stdout os.File, lines chan string, eof chan bool) {
+	buffered_reader := bufio.NewReader(input)
+	for {
+		line, _, err := buffered_reader.ReadLine()
+		if err == os.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal("Some error reading the input: ", err.String())
+		}
+
+		line_string := string(line)
+
+		lines <- line_string // send the line to the multiplexer
+
+	}
+}
+
+type OutputHandler func(lines chan string, eof chan bool)
+
+func demultiplexer(handlers OutputHandler) (lines chan string) {
+	lines := make(chan string)
+	go func() {
+		for {
+			line <- lines
+
+		}
+	}()
+	return lines
+}

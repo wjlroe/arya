@@ -7,17 +7,24 @@ import (
 	"regexp"
 	"exec"
 	"time"
+	"bufio"
 )
 
 type Stat struct{
 	time string
 	num_errors int
 	matched_lines []string
+
+	lines chan string // channel for lines into the handler
+	eof chan bool // signal to handler to clean up and quit
+	quit chan bool // signal that handler has quit
 }
 
 func (s *Stat) String() string {
 	return fmt.Sprintf("Date: %s, Num errors: %d", s.time, s.num_errors)
 }
+
+type OutputHandler func(stat Stat)
 
 // Refine the below for build errors a bit more...
 var go_build_error = regexp.MustCompile(".*:[0-9]*: .*")
@@ -60,17 +67,39 @@ func main() {
 	}
 
 	// TODO: Refactor to bufio here and send each line to the handlers, then collect results
-	stat := GocheckHandler(command.Stdout)
+	//stat := GocheckHandler(command.Stdout)
 	//stat := GoTestHandler(command.Stdout)
-	stat.time = time.LocalTime().Format(time.UnixDate)
-	fmt.Printf("Stats: %s\n", stat)
+
+	feedHandlers(command.Stdout)
 }
 
-func feedHandlers(stdout os.File, lines chan string, eof chan bool) {
+func feedHandlers(input *os.File) {
 	buffered_reader := bufio.NewReader(input)
+	handlers := []OutputHandler{GocheckHandler}
+	quit := make(chan bool, len(handlers))
+	stat_objs := make([]Stat, len(handlers))
+	this_time := time.LocalTime().Format(time.UnixDate)
+	for i,handler := range(handlers) {
+		stat_objs[i].quit = quit
+		stat_objs[i].time = this_time
+		// Start all the handlers up and pass them a stat object
+		go handler(stat_objs[i])
+	}
+
 	for {
 		line, _, err := buffered_reader.ReadLine()
 		if err == os.EOF {
+			fmt.Println("Going to send the eof signal to all the handlers")
+			for _,stat := range(stat_objs) {
+				stat.eof <- true
+			}
+			fmt.Println("Going to wait for all the handlers to quit now")
+			for {
+				// wait for all the handlers to quit
+				<-quit
+			}
+			fmt.Println("All handlers have quit")
+			fmt.Println(stat_objs)
 			break
 		}
 		if err != nil {
@@ -79,20 +108,8 @@ func feedHandlers(stdout os.File, lines chan string, eof chan bool) {
 
 		line_string := string(line)
 
-		lines <- line_string // send the line to the multiplexer
-
-	}
-}
-
-type OutputHandler func(lines chan string, eof chan bool)
-
-func demultiplexer(handlers OutputHandler) (lines chan string) {
-	lines := make(chan string)
-	go func() {
-		for {
-			line <- lines
-
+		for _,stat := range(stat_objs) {
+			stat.lines <- line_string
 		}
-	}()
-	return lines
+	}
 }

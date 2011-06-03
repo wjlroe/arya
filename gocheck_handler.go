@@ -16,6 +16,9 @@ L:
 		case line := <-stat.lines:
 			processLine(stat, line)
 		case <-stat.eof:
+			if len(stat.matched_lines) > 0 {
+				stat.matched = true
+			}
 			stat.quit <- true
 			break L
 		}

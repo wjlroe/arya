@@ -7,6 +7,9 @@ Arya is a tool to collect stats from your coding activities so you can track how
 ## Features:
 
 * Understands a variety of test/compile outputs
+
+## TODO
+
 * Creates CSVs per project
 * Uploads your stats to arya-codestats site so you can code anywhere and see the results anywhere
 
